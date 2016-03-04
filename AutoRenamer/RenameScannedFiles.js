@@ -1,3 +1,19 @@
+/*
+Auto file renamer - Ever had a bunch of files that were named the same but you wanted to rename them sequentially? Whenever I scan some documents, the scanner scans and sends them to be via email but the file name has the same attachement. If I want to download all those files to a single folder, I need to drop a file in the folder and rename it before I can drop another one due to the same file name. This becomes rather tedious if there are multiple documents.
+
+So here's a script to do that automatically. Just drop any file with a filename in the renameList array in the folder where you started this script and it will rename it to a sequential order. While the script is executing, it will add a continue.txt file in the folder, so make sure you execute the script again to stop the loop (and remove continue.txt).
+
+Really though, it's just a script that runs in a loop once you start it (with a 1500ms interval) and continues doing your task until you execute the script again. So you can customize it to anything else.
+
+	to execute on windows, 
+		cscript RenameScannedFiles.js or 
+		wscript RenameScannedFiles.js
+
+TODO: 
+1. handle different file extensions
+2. Refactor working code outside and pass as anonymous/lambda function to help reusability.
+*/
+
 // WScript common code
 var console = {
     log: function (s) { WScript.Echo(s); },

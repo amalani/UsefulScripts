@@ -24,18 +24,18 @@ TODO:
 
 // WScript common code
 var console = {
-    log: function (s) { WScript.Echo(s); },
-    debug: function (s) { if (this.isDebugging) this.log(s); },
+    log: function(s) { WScript.Echo(s); },
+    debug: function(s) { if (this.isDebugging) this.log(s); },
     isDebugging: false
 };
 function alert(s) { console.log(s); }
 
 var context = {
     scriptFileName: String(WScript.ScriptName).toLowerCase(),
-    scriptFolder: WScript.ScriptFullName.replace(WScript.ScriptName, ''), // has trailing slash
+    scriptFolder:	WScript.ScriptFullName.replace(WScript.ScriptName, ''), // has trailing slash
     arguments: [],
-    loadArguments: function () {
-        for (var i = 0; count = WScript.Arguments.Count(), i < count; i++) {
+    loadArguments: function() {
+        for (var i = 0, count = WScript.Arguments.Count(); i < count; i++) {
             context.arguments.push(WScript.Arguments.item(i))
         }
     }
@@ -45,7 +45,7 @@ context.loadArguments();
 // Common helpers
 // Finds an item in an array.
 if (!Array.prototype.indexOf) {
-    Array.prototype.indexOf = function (s) {
+    Array.prototype.indexOf = function(s) {
         for (var i = 0; i < this.length; i++) {
             if (this[i].indexOf(s) > -1) return i;
         }
@@ -55,7 +55,7 @@ if (!Array.prototype.indexOf) {
 
 if (!String.prototype.trim) {
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/trim
-    String.prototype.trim = function () {
+    String.prototype.trim = function() {
         return this.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '');
     };
 }
@@ -73,12 +73,11 @@ function ScannedFileRenamer() {
 ScannedFileRenamer.prototype = {
     constructor: ScannedFileRenamer,
 
-    run: function () {
+    run: function() {
         var stop = this.startOrStopLoop();
 
         if (!stop) {
             this.getLastFile();
-
             this.runLoop();
         }
     },
@@ -86,12 +85,11 @@ ScannedFileRenamer.prototype = {
     getLastFile : function() {
         var id = 1;
 
-        for (var i = 1; i < 200; i++) {
+        for (var i = 1; i < 2000; i++) {
             try  {
                 var file = this.fso.getFile(i + '.pdf');
             }
             catch (ex) {
-
                 this.nextFileNumber = i;
                 break;
             }
@@ -111,6 +109,7 @@ ScannedFileRenamer.prototype = {
                     console.log("Renamed '" + this.renameList[i] + "' -> '" + this.nextFileNumber + ".pdf'");
                     this.nextFileNumber++;
                     didAction = true;
+					break;
                 }
                 catch (ex) {
                     // console.log(ex.message);
@@ -124,7 +123,6 @@ ScannedFileRenamer.prototype = {
             WScript.Sleep(1500);
             foundFile = this.shouldContinue();
         }
-
     },
 
     shouldContinue : function() {
@@ -137,7 +135,7 @@ ScannedFileRenamer.prototype = {
         }
     },
 
-    startOrStopLoop: function () {
+    startOrStopLoop: function() {
         try {
             var file = this.fso.getFile('continue.txt');
             // Found - delete.

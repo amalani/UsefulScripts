@@ -1,8 +1,8 @@
 var EMAIL = "";
+var GMAIL_LABEL = "";
+var PURGE_AFTER = "60";
 
-# var EMAIL = "";
-var GMAIL_LABEL = "Newsletters";
-var PURGE_AFTER = "30";
+// --- Copy below this line into script ---
 
 function Intialize() {
     return;

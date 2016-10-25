@@ -1,83 +1,58 @@
 var EMAIL = "";
 var GMAIL_LABEL = "";
-var PURGE_AFTER = "60";
+var PURGE_AFTER = "30";
+
+# Search filter to retrieve threads.
+var search_filter = "in:label_to_delete"
+# Once you have the threads, I only wanted to delete emails sent by the following person. 
+var filter1 = { from: 'donotreply@us.gov' }
 
 // --- Copy below this line into script ---
 
-function Intialize() {
-    return;
-}
-
-function Install() {
-    ScriptApp.newTrigger("purgeGmail")
-        .timeBased()
-        .at(new Date((new Date()).getTime() + 1000*60*2))
-        .create();  
-    ScriptApp.newTrigger("purgeGmail")
-        .timeBased().everyDays(1).create();
-}
-
-function Uninstall() {
-    var triggers = ScriptApp.getScriptTriggers();
-    for (var i=0; i<triggers.length; i++) {
-        ScriptApp.deleteTrigger(triggers[i]);
+function Email(email_subject, email_body) {
+    var message = {
+        to: EMAIL,
+        subject: "GmailPurge: " + email_subject,
+        htmlBody: email_body,
     }
-}
-
-function Email(subject, message) {
-    MailApp.sendEmail(EMAIL, subject, message);
+    MailApp.sendEmail(message);
 }
 
 function purgeGmail() {
-    var age = new Date();  
-    age.setDate(age.getDate() - PURGE_AFTER);    
+    var age = new Date();
+    age.setDate(age.getDate() - PURGE_AFTER);
 
-    var purge  = Utilities.formatDate(age, Session.getScriptTimeZone(), "yyyy-MM-dd");
-    var search = "label:" + GMAIL_LABEL + " before:" + purge;
+    var purge_date  = Utilities.formatDate(age, Session.getScriptTimeZone(), "yyyy-MM-dd");
+    var search = search_filter + ' before:' + purge_date;
 
     try {
-    
-    var threads = GmailApp.search(search, 0, 100);
-    /*
-    if (threads.length == 100) {
-        ScriptApp.newTrigger("purgeGmail")
-            .timeBased()
-            .at(new Date((new Date()).getTime() + 1000*60*10))
-            .create();
-    }
-    */
-    Email('Found: ' + threads.length + ' emails', "");
+        var threads = GmailApp.search(search, 0, 20);
+        var count = 0;
 
-    /*
-    for (var i=0; i<threads.length; i++) {
-        var messages = GmailApp.getMessagesForThread(threads[i]);
-        for (var j=0; j<messages.length; j++) {
-            var email = messages[j];
-            if (email.getDate() < age) {
-            # email.moveToTrash();
+        var body = ['Emails deleted:'];
+        for (var i = 0; i < threads.length; i++) {
+            var messages = GmailApp.getMessagesForThread(threads[i]);
+            for (var j = 0; j < messages.length; j++) {
+                var message = messages[j];
+
+                if (message.getFrom().indexOf(filter1.from) != -1) {
+                    body.push("ThreadSubject: " + threads[i].getFirstMessageSubject());
+                    body.push("From: " + message.getFrom())
+                    body.push("Date: " + message.getDate());
+                    body.push("To: " + message.getTo())
+                    body.push("");
+
+                    message.moveToTrash();
+                    count++;
+                }
             }
         }
-    }
-    */
-    
+
+        var subject = 'Deleted ' + count + ' emails.';
+        Email(subject, body.join('<br>'));
     }
     catch (e) {
         Email('Error', e.message)
     }
 }
 
-
-
-/* Gmail purge - original from http://labnol.org/?p=27605, modified */
-/*
-  For details, refer http://labnol.org/?p=27605
-  T U T O R I A L
-  - - - - - - - - 
-  Step 1. Update the values of fields GMAIL_LABEL and PURGE_AFTER above.
-  Step 2. Go to Run -> Initialize and authorize the script.
-  Step 3. Go to Run -> Install to install the script.
-
-  You can now exit this window and any email messages in Gmail folder will automatically 
-  get purged after 'n' days. The script will run by itself everyday at 01:00 hours.
-  Also, you may go to Run -> Uninstall to stop the purging script anytime.
-*/

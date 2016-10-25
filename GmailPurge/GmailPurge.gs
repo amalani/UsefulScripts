@@ -1,59 +1,19 @@
-// The name of the Gmail Label that is to be purged?
 var GMAIL_LABEL = "Newsletters";
-
-
-// Purge messages automatically after how many days?
-var PURGE_AFTER = "10";
+var PURGE_AFTER = "30";
 
 
 
 /*
-
   For details, refer http://labnol.org/?p=27605
-
-
   T U T O R I A L
   - - - - - - - - 
-  
   Step 1. Update the values of fields GMAIL_LABEL and PURGE_AFTER above.
-  
   Step 2. Go to Run -> Initialize and authorize the script.
-  
   Step 3. Go to Run -> Install to install the script.
-  
+
   You can now exit this window and any email messages in Gmail folder will automatically 
   get purged after 'n' days. The script will run by itself everyday at 01:00 hours.
-  
   Also, you may go to Run -> Uninstall to stop the purging script anytime.
- 
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 */
 
 
@@ -110,11 +70,15 @@ function purgeGmail() {
       for (var j=0; j<messages.length; j++) {
         var email = messages[j];       
         if (email.getDate() < age) {
-          email.moveToTrash();
+            # email.moveToTrash();
+
         }
       }
     }
     
   } catch (e) {}
-  
 }
+
+
+
+/* Gmail purge - original from http://labnol.org/?p=27605, modified */

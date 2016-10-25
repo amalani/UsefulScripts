@@ -1,64 +1,69 @@
+var EMAIL = "";
+
+# var EMAIL = "";
 var GMAIL_LABEL = "Newsletters";
 var PURGE_AFTER = "30";
 
-
-
 function Intialize() {
-  return;
+    return;
 }
 
 function Install() {
-
-  ScriptApp.newTrigger("purgeGmail")
-           .timeBased()
-           .at(new Date((new Date()).getTime() + 1000*60*2))
-           .create();
-  
-  ScriptApp.newTrigger("purgeGmail")
-           .timeBased().everyDays(1).create();
-
+    ScriptApp.newTrigger("purgeGmail")
+        .timeBased()
+        .at(new Date((new Date()).getTime() + 1000*60*2))
+        .create();  
+    ScriptApp.newTrigger("purgeGmail")
+        .timeBased().everyDays(1).create();
 }
 
 function Uninstall() {
-  
-  var triggers = ScriptApp.getScriptTriggers();
-  for (var i=0; i<triggers.length; i++) {
-    ScriptApp.deleteTrigger(triggers[i]);
-  }
-  
+    var triggers = ScriptApp.getScriptTriggers();
+    for (var i=0; i<triggers.length; i++) {
+        ScriptApp.deleteTrigger(triggers[i]);
+    }
+}
+
+function Email(subject, message) {
+    MailApp.sendEmail(EMAIL, subject, message);
 }
 
 function purgeGmail() {
-  
-  var age = new Date();  
-  age.setDate(age.getDate() - PURGE_AFTER);    
-  
-  var purge  = Utilities.formatDate(age, Session.getScriptTimeZone(), "yyyy-MM-dd");
-  var search = "label:" + GMAIL_LABEL + " before:" + purge;
-  
-  try {
+    var age = new Date();  
+    age.setDate(age.getDate() - PURGE_AFTER);    
+
+    var purge  = Utilities.formatDate(age, Session.getScriptTimeZone(), "yyyy-MM-dd");
+    var search = "label:" + GMAIL_LABEL + " before:" + purge;
+
+    try {
     
     var threads = GmailApp.search(search, 0, 100);
-    
+    /*
     if (threads.length == 100) {
-      ScriptApp.newTrigger("purgeGmail")
-               .timeBased()
-               .at(new Date((new Date()).getTime() + 1000*60*10))
-               .create();
+        ScriptApp.newTrigger("purgeGmail")
+            .timeBased()
+            .at(new Date((new Date()).getTime() + 1000*60*10))
+            .create();
     }
-    
-    for (var i=0; i<threads.length; i++) {
-      var messages = GmailApp.getMessagesForThread(threads[i]);
-      for (var j=0; j<messages.length; j++) {
-        var email = messages[j];       
-        if (email.getDate() < age) {
-            # email.moveToTrash();
+    */
+    Email('Found: ' + threads.length + ' emails', "");
 
+    /*
+    for (var i=0; i<threads.length; i++) {
+        var messages = GmailApp.getMessagesForThread(threads[i]);
+        for (var j=0; j<messages.length; j++) {
+            var email = messages[j];
+            if (email.getDate() < age) {
+            # email.moveToTrash();
+            }
         }
-      }
     }
+    */
     
-  } catch (e) {}
+    }
+    catch (e) {
+        Email('Error', e.message)
+    }
 }
 
 

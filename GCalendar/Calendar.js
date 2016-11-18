@@ -65,24 +65,6 @@ GCal.prototype = {
         var stats = { threads: 0, processed: 0 }
 
         try {
-            // // body.push('Emails deleted:');
-            // var day = new Date();
-            // for (var i = 0; i < 3; i++) {
-            //     Logger.log(day)
-            //     var events = CalendarApp.getDefaultCalendar().getEventsForDay(day);
-            //     Logger.log('Number of events: ' + events.length);
-
-            //     for (var e = 0; e < events.length; e++) {
-            //         var ev = events[e];
-            //         var id = ev.getId();
-            //         Logger.log(id);
-
-            //     }
-
-            //     day = day.addDays(1);
-            // }
-
-
             var calendarId = 'primary';
             var now = new Date();
             var events = Calendar.Events.list(calendarId, {
@@ -111,7 +93,9 @@ GCal.prototype = {
                                 if (ev.colorId != 3) {
                                     Logger.log('Updating color');
                                     ev.colorId = 3;
-                                    Calendar.Events.patch(ev, calendarId, eventId)
+                                    if (!this.settings.debug) {
+                                        Calendar.Events.patch(ev, calendarId, eventId)
+                                    }
                                 }
                             }
                             Logger.log('')

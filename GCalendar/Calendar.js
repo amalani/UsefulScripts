@@ -79,9 +79,14 @@ GCal.prototype = {
         }
 
         // Event processors:
-        // Color code events containing the passed in search term to the passed in colorId.
+        // Color code events containing the passed in search term in their description to the passed in colorId.
         this.processEventHelperColorCodeByDescription(
-            calendarId, eventId, event, eventStartStr, 'SEARCH_FOR_THIS', 3
+            calendarId,
+            eventId,
+            event,
+            eventStartStr,
+            'SEARCH_FOR_THIS',      // Search term
+            3                       // ColorId
         );
         // Add more event processors here:
 

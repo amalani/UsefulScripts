@@ -29,18 +29,11 @@ Date.prototype.addDays = function(days) {
     return d;
 }
 
-/***
- * Parses an RFC 3339 date or datetime string and returns a corresponding Date
- * object. This function is provided as a workaround until Apps Script properly
- * supports RFC 3339 dates. For more information, see
- * https://code.google.com/p/google-apps-script-issues/issues/detail?id=3860
- * @param {string} string The RFC 3339 string to parse.
- * @return {Date} The parsed date.
- */
-function parseDate(string) {
-  var parts = string.split('T');
-  parts[0] = parts[0].replace(/-/g, '/');
-  return new Date(parts.join(' '));
+// RFC 3339 date/datetime parser. Adapted from https://code.google.com/p/google-apps-script-issues/issues/detail?id=3860
+String.prototype.parseRFC3339Date = function() {
+    var parts = this.split('T');
+    parts[0] = parts[0].replace(/-/g, '/');
+    return new Date(parts.join(' '));
 }
 
 function GCal(settings) {
@@ -72,7 +65,7 @@ GCal.prototype = {
                     var event = events.items[i];
                     if (event.start.date) {
                         // All-day event.
-                        // var start = parseDate(event.start.date);
+                        // var start = String(event.start.date).parseRFC3339Date();
                         // Logger.log('%s (%s)', event.summary, start.toLocaleDateString());
                     } else {
                         var eventId = event.id;
@@ -81,19 +74,21 @@ GCal.prototype = {
                         if (ev.description) {
                             // Logger.log(ev.summary)
                             if (ev.description.indexOf('dropbox.greenhouse.io') != -1) {
-                                var start = parseDate(event.start.dateTime);
-                                
-                                Logger.log('%s, (%s)', ev.summary, start.toLocaleString());
-                                
+                                var start = String(event.start.dateTime).parseRFC3339Date();
+                                body.push(start.toLocaleString() + ': ' + ev.summary);
                                 if (ev.colorId != 3) {
-                                    Logger.log('Updating color');
+                                    body.push('Updating color');
                                     ev.colorId = 3;
                                     if (!this.settings.debug) {
                                         Calendar.Events.patch(ev, calendarId, eventId)
                                     }
                                 }
+                                else {
+                                    body.push('Color update not needed');
+                                }
+
+                                body.push('')
                             }
-                            body.push('')
                         }
                     }
                 }
@@ -109,12 +104,14 @@ GCal.prototype = {
         this.notify(subject, body);
     },
 
+    // Send an email and/or log.
     notify: function(subject, body) {
         body.push("", MailApp.getRemainingDailyQuota() + " more emails can be sent today.");
         bodyText = body.join('<br>');
+        subjectText = '[gscript][GCal]: ' + subject
 
         if (this.settings.log) {
-            Logger.log(subject);
+            Logger.log(subjectText);
             for (var i = 0; i < body.length; i++) {
                 Logger.log(body[i]);
             }
@@ -122,7 +119,7 @@ GCal.prototype = {
 
         var message = {
             to: this.settings.notificationsAddr,
-            subject: "[gscript][GCal]: " + subject,
+            subject: subjectText,
             htmlBody: bodyText,
         }
         MailApp.sendEmail(message);

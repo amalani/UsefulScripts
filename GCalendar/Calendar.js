@@ -25,13 +25,11 @@ var settings = {
 }
 
 // -- Do not touch code below this.
-
 Date.prototype.addDays = function(days) {
     var d = new Date(this.valueOf());
     d.setDate(d.getDate() + days);
     return d;
 }
-
 // RFC 3339 date/datetime parser. Adapted from https://code.google.com/p/google-apps-script-issues/issues/detail?id=3860
 String.prototype.parseRFC3339Date = function() {
     var parts = this.split('T');
@@ -45,17 +43,17 @@ function GCal(settings) {
 }
 GCal.prototype = {
     // Event processing helpers.
-    processEventHelperColorCodeByDescription: function(calendarId, eventId, event, eventStartStr, body, searchTerm, colorId) {
+    processEventHelperColorCodeByDescription: function(calendarId, eventId, event, eventStartStr, searchTerm, colorId) {
         // Look for searchTerm in the description field of the event and if found, change the color of the event
         // to the passed in colorId.
         // See colorIds here: https://developers.google.com/apps-script/reference/calendar/color or 
         // call Calendar.Colors.get()
         if (event.description && event.description.indexOf(searchTerm) != -1) {
-            body.push(eventStartStr + ': ' + event.summary);
+            this.body.push(eventStartStr + ': ' + event.summary);
             if (event.colorId == colorId) {
-                body.push('Color update not needed')
+                this.body.push('Color update not needed')
             } else {
-                body.push('Color updated');
+                this.body.push('Color updated');
                 event.colorId = colorId;
                 if (!this.settings.debug) {
                     Calendar.Events.patch(event, calendarId, eventId);
@@ -65,7 +63,7 @@ GCal.prototype = {
     },
 
     // Called once for each event.
-    processEvent: function(calendarId, eventId, body) {
+    processEvent: function(calendarId, eventId) {
         // This refers to the event object mentioned here: https://developers.google.com/google-apps/calendar/v3/reference/events
         // Note - all fields may not be present in each event so always do if (event.field) check before accessing.
         var event = Calendar.Events.get(calendarId, eventId);
@@ -79,33 +77,16 @@ GCal.prototype = {
             eventStart = String(event.start.dateTime).parseRFC3339Date();
             eventStartStr = eventStart.toLocaleString();
         }
-    
+
         // Event processors:
         // Color code events containing the passed in search term to the passed in colorId.
         this.processEventHelperColorCodeByDescription(
-            calendarId, eventId, event, eventStartStr, body, 'dropbox.greenhouse.io', 3
+            calendarId, eventId, event, eventStartStr, 'dropbox.greenhouse.io', 3
         );
-        // if (event.description) {
-        //     if (event.description.indexOf('dropbox.greenhouse.io') != -1) {
-        //         body.push(eventStartStr + ': ' + event.summary);
-        //         if (event.colorId != 3) {
-        //             body.push('Updating color');
-        //             event.colorId = 3;
-        //             if (!this.settings.debug) {
-        //                 Calendar.Events.patch(event, calendarId, eventId)
-        //             }
-        //         }
-        //         else {
-        //             body.push('Color update not needed');
-        //         }
-
-        //         body.push('')
-        //     }
-        // }
+        // Add more event processors here:
     },
 
     run: function() {
-        var body = [];
         var calendarId = 'primary';         // This picks your primary calendar.
         var now = new Date();
 
@@ -124,24 +105,24 @@ GCal.prototype = {
                 for (var i = 0; i < events.items.length; i++) {
                     var event = events.items[i];
                     var eventId = event.id;
-                    this.processEvent(calendarId, eventId, body);
+                    this.processEvent(calendarId, eventId, this.body);
                 }
             } else {
-                body.push('No events found.');
+                this.body.push('No events found.');
             }
         }
         catch (ex) {
-            body.push('Exception: ' + ex.message);
+            this.body.push('Exception: ' + ex.message);
         }
 
         var subject = "Script run results";
-        this.notify(subject, body);
+        this.notify(subject, this.body);
     },
 
     // Send an email and/or log.
-    notify: function(subject, body) {
-        body.push("", MailApp.getRemainingDailyQuota() + " more emails can be sent today.");
-        bodyText = body.join('<br>');
+    notify: function(subject) {
+        this.body.push("", MailApp.getRemainingDailyQuota() + " more emails can be sent today.");
+        bodyText = this.body.join('<br>');
         subjectText = '[gscript][GCal]: ' + subject;
         if (this.settings.debug) {
             subjectText += '[debug mode]';
@@ -149,8 +130,8 @@ GCal.prototype = {
 
         if (this.settings.log) {
             Logger.log(subjectText);
-            for (var i = 0; i < body.length; i++) {
-                Logger.log(body[i]);
+            for (var i = 0; i < this.body.length; i++) {
+                Logger.log(this.body[i]);
             }
         }
 

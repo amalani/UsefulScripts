@@ -15,9 +15,9 @@ Color update not needed.
 */
 
 var settings = {
-    notificationsAddr: "<enter your email address here>",   // Leave blank for no emails.
+    notificationsAddr: '<enter your email address here>',   // Leave blank for no emails.
     debug: true,                                            // No changes, log only.
-    log: false,                                             // Should log?
+    log: true,                                             // Should log?
     eventCount: 25,                                         // Process the next 'eventCount' events from now.
 }
 

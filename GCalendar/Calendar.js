@@ -10,6 +10,7 @@
 var settings = {
     notificationsAddr: "<enter your email address here>",   // Leave blank for no emails.
     debug: true,                                            // No changes, log only.
+    log: false,                                             // Should log?
 }
 
 // -- Do not touch code below this.
@@ -39,31 +40,27 @@ function GCal(settings) {
 }
 
 GCal.prototype = {
-    constructor: GCal,
-
     notify: function(subject, body) {
-        body.push("<br><br>" + MailApp.getRemainingDailyQuota() + " more emails can be sent today.");
+        body.push("", MailApp.getRemainingDailyQuota() + " more emails can be sent today.");
         bodyText = body.join('<br>');
+
+        if (this.settings.log) {
+            Logger.log(subject);
+            for (var i = 0; i < body.length; i++) {
+                Logger.log(body[i]);
+            }
+        }
+
         var message = {
             to: this.settings.notificationsAddr,
             subject: "[gscript][GCal]: " + subject,
             htmlBody: bodyText,
         }
-
-        if (this.settings.debug) {
-            Logger.log(subject);
-            for (var i = 0; i < body.length; i++) {
-                Logger.log(body[i]);
-            }
-        } else {
-            MailApp.sendEmail(message);
-        }
+        MailApp.sendEmail(message);
     },
 
     run: function() {
         var body = [];
-        var stats = { threads: 0, processed: 0 }
-
         try {
             var calendarId = 'primary';
             var now = new Date();
@@ -100,16 +97,6 @@ GCal.prototype = {
                             }
                             Logger.log('')
                         }
-                        // // Logger.log('%s (%s)', event.summary, start.toLocaleString());
-                        // if (event.summary.toLowerCase().indexOf('interview') != -1 ||
-                        //     event.description.toLowerCase().indexOf('dropbox.greeenhouse.io') != -1) {
-                        //     Logger.log('%s (%s)', event.summary, start.toLocaleString());
-                        //     var ev = Calendar.Events.get(calendarId, event.id)
-                        //     Logger.log("Current color: ", ev.colorId);
-                        //     ev.colorId = 3;
-                        //     Calendar.Events.patch(ev, calendarId, event.id)
-                        // }
-
                     }
                 }
             } else {
@@ -120,11 +107,12 @@ GCal.prototype = {
             body.push('Exception: ' + ex.message);
         }
 
-        // var subject = 'Deleted ' + stats.processed + ' emails from ' + stats.threads + ' threads.';
-        var subject = "entries updated";
+        var subject = "Script run complete";
         this.notify(subject, body);
     }
 };
 
-var purger = new GCal(settings);
-purger.run();
+function gcalRun() {
+    var purger = new GCal(settings);
+    purger.run();
+}

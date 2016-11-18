@@ -177,7 +177,12 @@ function gcalRun() {
 
        Look for 
         this.processEventHelperColorCodeByDescription(
-            calendarId, eventId, event, eventStartStr, 'SEARCH_FOR_THIS', 3
+            calendarId,
+            eventId,
+            event,
+            eventStartStr,
+            'SEARCH_FOR_THIS',      // Search term
+            3                       // ColorId
         );
         and change 'SEARCH_FOR_THIS' to the text you want to match in the event description.
 

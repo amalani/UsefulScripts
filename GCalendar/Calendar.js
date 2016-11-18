@@ -1,27 +1,27 @@
 /* 
     Google Calendar event modification script.
+    If you use this, do let me know so I can notify you if/when I update it. Feel free to send 
+    pull requests.
 
-    If you use this, do let me know so I can notify you if/when I update it.
+    The basic processEventHelperColorCodeByDescription lets you find events that contain text
+    you search for in the event's description field and change their color to the color you specify.
 
-// Google calendar developer API reference: 
-// https://developers.google.com/apps-script/reference/calendar/calendar
-// V3/Advanced API - used for advanced manipulation.
-// https://developers.google.com/google-apps/calendar/v3/reference/events
-// https://developers.google.com/apps-script/advanced/calendar
+    When run, if you the processEventHelperColorCodeByDescription line in processEvents() finds events
+    that have the passed in text in their description, you should get an email that looks like this
+        November 18, 2016 10:30:00 AM PST: <event title>
+        Color updated
+        November 21, 2016 3:00:00 PM PST: <event title> 
+        Color update not needed.
 
-// When run, you'll get an email like this:
-You'll get an email like this: 
-November 18, 2016 10:30:00 AM PST: <event title>
-Color updated
-November 21, 2016 3:00:00 PM PST: <event title> 
-Color update not needed.
+    See foot notes for instructions.
 */
 
 var settings = {
     notificationsAddr: '<enter your email address here>',   // Leave blank for no emails.
-    debug: true,                                            // No changes, log only.
-    log: true,                                             // Should log?
-    eventCount: 25,                                         // Process the next 'eventCount' events from now.
+    debug: false,                                           // If true, do not commit - helpful when editing the script.
+    log: true,                                              // Should log? (results appear in View -> Log)
+    email: true,                                            // Should send email (turn it off if you've set the trigger to run very often')
+    eventCount: 20,                                         // Process the next 'eventCount' events from now.
 }
 
 // -- Do not touch code below this.
@@ -81,9 +81,12 @@ GCal.prototype = {
         // Event processors:
         // Color code events containing the passed in search term to the passed in colorId.
         this.processEventHelperColorCodeByDescription(
-            calendarId, eventId, event, eventStartStr, 'dropbox.greenhouse.io', 3
+            calendarId, eventId, event, eventStartStr, 'SEARCH_FOR_THIS', 3
         );
         // Add more event processors here:
+
+
+        // Stop editing file here.
     },
 
     run: function() {
@@ -92,6 +95,7 @@ GCal.prototype = {
 
         try {
             // Get the next 'eventCount' events from now.
+            // https://developers.google.com/google-apps/calendar/v3/reference/events/list
             var events = Calendar.Events.list(calendarId, {
                 timeMin: now.toISOString(),
                 singleEvents: true,
@@ -124,6 +128,7 @@ GCal.prototype = {
         this.body.push("", MailApp.getRemainingDailyQuota() + " more emails can be sent today.");
         bodyText = this.body.join('<br>');
         subjectText = '[gscript][GCal]: ' + subject;
+
         if (this.settings.debug) {
             subjectText += '[debug mode]';
         }
@@ -135,16 +140,55 @@ GCal.prototype = {
             }
         }
 
-        var message = {
-            to: this.settings.notificationsAddr,
-            subject: subjectText,
-            htmlBody: bodyText,
+        if (this.settings.email) {
+            var message = {
+                to: this.settings.notificationsAddr,
+                subject: subjectText,
+                htmlBody: bodyText,
+            }
+            MailApp.sendEmail(message);
         }
-        MailApp.sendEmail(message);
     }
 };
 
 function gcalRun() {
-    var purger = new GCal(settings);
-    purger.run();
+    var gcal = new GCal(settings);
+    gcal.run();
 }
+
+/* 
+    Foot notes:
+
+    Instructions:
+    1. Go to script.google.com
+    2. If asked - provide authorization.
+    3. Click on Resources -> Advanced Google Services -> Enable Calendar API.
+    4. Create a new project, add new file - paste the contents of this file.
+    5. Update the settings block at the top of the file.
+    6. I have provided a basic helper 'processEventHelperColorCodeByDescription' that looks at the 
+       description of each event and changes the event's color if the text is found. Update this
+       to match the search text you want and colorId. You can add more such methods and call them 
+       from processEvent()
+
+       Look for 
+        this.processEventHelperColorCodeByDescription(
+            calendarId, eventId, event, eventStartStr, 'SEARCH_FOR_THIS', 3
+        );
+        and change 'SEARCH_FOR_THIS' to the text you want to match in the event description.
+
+    7. Run the gcalRun script from the toolbar and check if the changes are reflected. The first time
+       the script is run, it may ask you to authorize access to your calendar.
+    8. Once verified, I change the settings.eventCount property to about two weeks worth of events in
+       my calendar.
+    9. Since people can add events to your calendar at any time, add a trigger from the toolbr
+       that runs the script every hour or two so ensure we don't miss events.
+    10.By default, the script sends an email every time it is run. You may want to turn it off by editing
+       the settings block.
+
+
+    Google calendar developer API reference: 
+        https://developers.google.com/apps-script/reference/calendar/calendar
+        V3/Advanced API - used for advanced manipulation.
+            https://developers.google.com/google-apps/calendar/v3/reference/events
+            https://developers.google.com/apps-script/advanced/calendar
+*/

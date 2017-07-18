@@ -1,2 +1,2 @@
 # UsefulScripts
-A collection of useful scripts for various purposes
+A collection of useful scripts for various purposes.

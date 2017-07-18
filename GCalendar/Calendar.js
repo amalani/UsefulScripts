@@ -61,6 +61,25 @@ GCal.prototype = {
             }
         }
     },
+    processEventHelperColorCodeBySubject: function(calendarId, eventId, event, eventStartStr, searchTerm, colorId) {
+        // Look for searchTerm in the subject field of the event and if found, change the color of the event
+        // to the passed in colorId.
+        // See colorIds here: https://developers.google.com/apps-script/reference/calendar/color or 
+        // call Calendar.Colors.get()
+        summary = String(event.summary).toLowerCase()
+        if (summary && summary.indexOf(searchTerm) != -1) {
+            this.body.push(eventStartStr + ': ' + event.summary);
+            if (event.colorId == colorId) {
+                this.body.push('Color update not needed')
+            } else {
+                this.body.push('Color updated');
+                event.colorId = colorId;
+                if (!this.settings.debug) {
+                    Calendar.Events.patch(event, calendarId, eventId);
+                }
+            }
+        }
+    },
 
     // Called once for each event.
     processEvent: function(calendarId, eventId) {
@@ -79,13 +98,21 @@ GCal.prototype = {
         }
 
         // Event processors:
-        // Color code events containing the passed in search term in their description to the passed in colorId.
+        // Color code events containing the passed in search term to the passed in colorId.
         this.processEventHelperColorCodeByDescription(
             calendarId,
             eventId,
             event,
             eventStartStr,
-            'SEARCH_FOR_THIS',      // Search term
+            'dropbox.greenhouse.io',
+            3                       // ColorId
+        );
+        this.processEventHelperColorCodeBySubject(
+            calendarId,
+            eventId,
+            event,
+            eventStartStr,
+            'interview',
             3                       // ColorId
         );
         // Add more event processors here:
@@ -98,6 +125,7 @@ GCal.prototype = {
         var calendarId = 'primary';         // This picks your primary calendar.
         var now = new Date();
 
+        // now = now.addDays(-3);
         try {
             // Get the next 'eventCount' events from now.
             // https://developers.google.com/google-apps/calendar/v3/reference/events/list
@@ -177,12 +205,7 @@ function gcalRun() {
 
        Look for 
         this.processEventHelperColorCodeByDescription(
-            calendarId,
-            eventId,
-            event,
-            eventStartStr,
-            'SEARCH_FOR_THIS',      // Search term
-            3                       // ColorId
+            calendarId, eventId, event, eventStartStr, 'SEARCH_FOR_THIS', 3
         );
         and change 'SEARCH_FOR_THIS' to the text you want to match in the event description.
 

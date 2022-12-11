@@ -37,10 +37,10 @@ var filters = [
 
 
 function purgeEmails(label, days, debug) {
-  var cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days)
+  var cutOff = new Date();
+  cutOff.setDate(cutOff.getDate() - days)
 
-  var dtString  = Utilities.formatDate(cutoff, Session.getScriptTimeZone(), "yyyy-MM-dd");
+  var dtString  = Utilities.formatDate(cutOff, Session.getScriptTimeZone(), "yyyy-MM-dd");
   var filter = "label:" + label + " before:" + dtString;
 
   // console.log(filter);
@@ -52,7 +52,7 @@ function purgeEmails(label, days, debug) {
       var messages = GmailApp.getMessagesForThread(threads[thread]);
       for (var message = 0; message < messages.length; message++) {
         var email = messages[message];       
-        if (email.getDate() < cutoff) {          
+        if (email.getDate() < cutOff) {          
           if (debug) {
             console.log(email.getFrom() + ": " + email.getSubject());
           }

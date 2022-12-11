@@ -1,6 +1,13 @@
 /*
 Script that lets you use GoogleScript engine to delete emails older than x days in particular labels.
 
+The way it would work is you use gmail filters to auto tag emails with certain labels (I use .delete_x but you can use any). 
+Then I filter promotional emails and set them to label 30 days, or some emails I want to keep longer - I put them in the 90 day label.
+Then update the filters array below to match your label names and cut off date. The script will run and keep the last x days of emails in the 
+Due to run time limits, I only deleted 100 emails per label per run - so if you have more, you may need to run it more often (you can set the trigger to every few hours or every day and it will keep doing its work in the background) 
+
+--- 
+
 1. Go to script.google.com.
 2. Create a new project.
 3. Paste this script.

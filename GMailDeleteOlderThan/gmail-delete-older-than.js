@@ -4,10 +4,15 @@ Script that lets you use GoogleScript engine to delete emails older than x days 
 1. Go to script.google.com.
 2. Create a new project.
 3. Paste this script.
-6. Run. 
+6. Run - Press the play button in the top nav (ensure the method name in the drop down next to it is clearEmails() and not purgeEmails())
+    - On first run - you'll get asked permission to allow access to your gmail account.
 7. View Logger - verify working as expected.
 8. Set debug to false.
 
+
+// Later once you've verified this works as you'd like.
+
+9. Go to the trigger tab (see alarm icon in left navigation) - set it to run every few hours or every day etc.
 
 */
 

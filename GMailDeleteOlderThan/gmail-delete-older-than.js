@@ -11,10 +11,11 @@ Due to run time limits, I only deleted 100 emails per label per run - so if you 
 1. Go to script.google.com.
 2. Create a new project.
 3. Paste this script.
-6. Run - Press the play button in the top nav (ensure the method name in the drop down next to it is clearEmails() and not purgeEmails())
+4. Update the filters below.
+5. Run - Press the play button in the top nav (ensure the method name in the drop down next to it is clearEmails() and not purgeEmails())
     - On first run - you'll get asked permission to allow access to your gmail account.
-7. View Logger - verify working as expected.
-8. Set debug to false.
+6. View Logger - verify working as expected.
+7. Set debug to false.
 
 
 // Later once you've verified this works as you'd like.

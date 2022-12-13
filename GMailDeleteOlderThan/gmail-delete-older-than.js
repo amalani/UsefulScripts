@@ -22,6 +22,8 @@ Due to run time limits, I only deleted 100 emails per label per run - so if you 
 
 9. Go to the trigger tab (see alarm icon in left navigation) - set it to run every few hours or every day etc.
 
+Note: Just be careful when you setup the filters so that emails get auto-labeled as these will get deleted behind the scenes. Sometimes, companies use the same "from" address when sending promotional emails as well as transactional emails that you may not want to accidentally delete.
+
 */
 
 

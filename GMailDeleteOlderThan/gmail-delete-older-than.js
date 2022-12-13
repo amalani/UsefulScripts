@@ -29,8 +29,8 @@ var config = {
   // true/false -> true will only log to console, false will actually delete.
   debug: false,
 
-  // These represent labels - for example the ".delete_7" label I want to delete emails older than 7 days.
-  // You can add as many such labels as you like. I've commented the last two as an example 
+  // These represent labels and the days you want to keep them - for instance, anything I want to keep only the most recent 7 days' emails, I label them with the .d7 label on row 1.
+  // You can add as many such label/day combos as you like. I've commented the last two as an example.
   filters: [
      ['.d7', 7]
     ,['.d30', 30]

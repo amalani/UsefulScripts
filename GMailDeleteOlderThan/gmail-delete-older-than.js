@@ -40,28 +40,26 @@ var config = {
   ],
 };
 
-function GmailDeleteOlderThan(config) {
-  this.config = config;
-}
+class GmailDeleteOlderThan {
+  constructor(config) {
+    this.config = config;
+  }
 
-GmailDeleteOlderThan.prototype = {
-  constructor: GmailDeleteOlderThan,
-
-  purgeEmails: function(label, days, debug) {
+  purgeEmails(label, days, debug) {
     var cutOff = new Date();
-    cutOff.setDate(cutOff.getDate() - days)
-  
-    var dtString  = Utilities.formatDate(cutOff, Session.getScriptTimeZone(), "yyyy-MM-dd");
+    cutOff.setDate(cutOff.getDate() - days);
+
+    var dtString = Utilities.formatDate(cutOff, Session.getScriptTimeZone(), "yyyy-MM-dd");
     var filter = "label:" + label + " before:" + dtString;
-  
+
     var count = 0;
     try {
       var threads = GmailApp.search(filter, 0, 100);
-        for (var thread = 0; thread < threads.length; thread++) {
+      for (var thread = 0; thread < threads.length; thread++) {
         var messages = GmailApp.getMessagesForThread(threads[thread]);
         for (var message = 0; message < messages.length; message++) {
-          var email = messages[message];       
-          if (email.getDate() < cutOff) {          
+          var email = messages[message];
+          if (email.getDate() < cutOff) {
             if (debug) {
               console.log(email.getFrom() + ": " + email.getSubject());
             }
@@ -75,17 +73,19 @@ GmailDeleteOlderThan.prototype = {
     } catch (e) {
       console.log(e);
     }
-  
+
     console.log("Deleted " + count + " messages for [" + label + "]");
-  },
-  
-  run: function() {
-    console.log("Start")
+  }
+
+  run() {
+    console.log("Start");
     for (var filter = 0; filter < this.config.filters.length; filter++) {
       this.purgeEmails(this.config.filters[filter][0], this.config.filters[filter][1], this.config.debug);
     }
-  }  
+  }
 }
 
-var runner = new GmailDeleteOlderThan(config);
-runner.run();
+function main() {
+  var runner = new GmailDeleteOlderThan(config);
+  runner.run();
+}

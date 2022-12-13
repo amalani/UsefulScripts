@@ -24,56 +24,68 @@ Due to run time limits, I only deleted 100 emails per label per run - so if you 
 
 */
 
-var debug = true; // true/false -> true will only log to console, false will actually delete.
 
-// These represent labels - for example the ".delete_7" label I want to delete emails older than 7 days.
-// You can add as many such labels as you like. I've commented the last two as an example 
-var filters = [
-   ['.delete_7', 7]
-  ,['.delete_30', 30]
-  ,['.delete_60', 60]  
-//   ,['.delete_90', 90]
-//   ,['.delete_180', 180]
-];
+var config = {
+  // true/false -> true will only log to console, false will actually delete.
+  debug: false,
 
+  // These represent labels - for example the ".delete_7" label I want to delete emails older than 7 days.
+  // You can add as many such labels as you like. I've commented the last two as an example 
+  filters: [
+     ['.d7', 7]
+    ,['.d30', 30]
+    ,['.d60', 60]  
+    ,['.d90', 90]
+    ,['.d180', 180]
+  ],
+};
 
-function purgeEmails(label, days, debug) {
-  var cutOff = new Date();
-  cutOff.setDate(cutOff.getDate() - days)
+function GmailDeleteOlderThan(config) {
+  this.config = config;
+}
 
-  var dtString  = Utilities.formatDate(cutOff, Session.getScriptTimeZone(), "yyyy-MM-dd");
-  var filter = "label:" + label + " before:" + dtString;
+GmailDeleteOlderThan.prototype = {
+  constructor: GmailDeleteOlderThan,
 
-  // console.log(filter);
-
-  var count = 0;
-  try {
-    var threads = GmailApp.search(filter, 0, 100);
-      for (var thread = 0; thread < threads.length; thread++) {
-      var messages = GmailApp.getMessagesForThread(threads[thread]);
-      for (var message = 0; message < messages.length; message++) {
-        var email = messages[message];       
-        if (email.getDate() < cutOff) {          
-          if (debug) {
-            console.log(email.getFrom() + ": " + email.getSubject());
+  purgeEmails: function(label, days, debug) {
+    var cutOff = new Date();
+    cutOff.setDate(cutOff.getDate() - days)
+  
+    var dtString  = Utilities.formatDate(cutOff, Session.getScriptTimeZone(), "yyyy-MM-dd");
+    var filter = "label:" + label + " before:" + dtString;
+  
+    var count = 0;
+    try {
+      var threads = GmailApp.search(filter, 0, 100);
+        for (var thread = 0; thread < threads.length; thread++) {
+        var messages = GmailApp.getMessagesForThread(threads[thread]);
+        for (var message = 0; message < messages.length; message++) {
+          var email = messages[message];       
+          if (email.getDate() < cutOff) {          
+            if (debug) {
+              console.log(email.getFrom() + ": " + email.getSubject());
+            }
+            else {
+              email.moveToTrash();
+            }
+            count++;
           }
-          else {
-            email.moveToTrash();
-          }
-          count++;
         }
       }
+    } catch (e) {
+      console.log(e);
     }
-  } catch (e) {
-    console.log(e);
-  }
-
-  console.log("Deleted " + count + " messages for [" + label + "]");
+  
+    console.log("Deleted " + count + " messages for [" + label + "]");
+  },
+  
+  run: function() {
+    console.log("Start")
+    for (var filter = 0; filter < this.config.filters.length; filter++) {
+      this.purgeEmails(this.config.filters[filter][0], this.config.filters[filter][1], this.config.debug);
+    }
+  }  
 }
 
-function clearEmails() {
-  console.log("Start")
-  for (var filter = 0; filter < filters.length; filter++) {
-    purgeEmails(filters[filter][0], filters[filter][1], debug);
-  }
-}
+var runner = new GmailDeleteOlderThan(config);
+runner.run();

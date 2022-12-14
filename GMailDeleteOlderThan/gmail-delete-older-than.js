@@ -26,7 +26,6 @@ Note: Just be careful when you setup the filters so that emails get auto-labeled
 
 */
 
-
 var config = {
   // true/false -> true will only log to console, false will actually delete.
   debug: false,
@@ -40,11 +39,27 @@ var config = {
     // ,['.d90', 90]
     // ,['.d180', 180]
   ],
+
+  notificationsAddr: '', // # Set to '' to not send emails.
 };
 
 class GmailDeleteOlderThan {
   constructor(config) {
     this.config = config;
+  }
+
+  notify(subject, body, notificationsAddr) {
+    body.push("<br><br>" + MailApp.getRemainingDailyQuota() + " more emails can be sent today.");
+    var message = {
+        to: notificationsAddr,
+        subject: "[gscript][Gmail-Delete-Older-Than]: " + subject,
+        htmlBody: body.join('<br>'),
+    }
+    if (this.config.debug) {
+        console.log("Debug send email: " + subject);
+    } else {
+        MailApp.sendEmail(message);
+    }
   }
 
   purgeEmails(label, days, debug) {
@@ -76,13 +91,23 @@ class GmailDeleteOlderThan {
       console.log(e);
     }
 
-    console.log("Deleted " + count + " messages for [" + label + "]");
+    var msg = "Deleted " + count + " messages for [" + label + "]";
+    console.log(msg);
+    return { message: msg, deletedCount: count };
   }
 
+
   run() {
-    console.log("Start");
+    var summary = [];
     for (var filter = 0; filter < this.config.filters.length; filter++) {
-      this.purgeEmails(this.config.filters[filter][0], this.config.filters[filter][1], this.config.debug);
+      var result = this.purgeEmails(this.config.filters[filter][0], this.config.filters[filter][1], this.config.debug);
+      if (result.deletedCount != 0) {
+        summary.push(result.message);
+      } 
+    }
+
+    if (this.config.notificationsAddr.indexOf('@') > -1 && summary.length != 0) {
+      this.notify("Emails deleted", summary, this.config.notificationsAddr);
     }
   }
 }

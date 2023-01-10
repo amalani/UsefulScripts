@@ -2,9 +2,11 @@
 Script that lets you use GoogleScript engine to delete emails older than x days in particular labels.
 
 The way it would work is you use gmail filters to auto tag emails with certain labels (I use .dXX but you can use any). 
-Then I filter promotional emails and set them to label 30 days, or some emails I want to keep longer - I put them in the 90 day label.
-Then update the filters array below to match your label names and cut off date. The script will run and keep the last x days of emails in the 
+Then I filter promotional emails and set them to auto label 30 days, or some emails I want to keep longer - I put them in the 90 day label.
+Then update the filters array below to match your label names and cut off date. The script will run and keep the last x days of emails but delete the rest.
 Due to run time limits, I only deleted 100 emails per label per run - so if you have more, you may need to run it more often (you can set the trigger to every few hours or every day and it will keep doing its work in the background) 
+
+Original at: https://github.com/amalani/UsefulScripts/blob/master/GMailDeleteOlderThan/gmail-delete-older-than.js
 
 --- 
 
@@ -49,17 +51,18 @@ class GmailDeleteOlderThan {
   }
 
   notify(subject, body, notificationsAddr) {
-    body.push("<br><br>" + MailApp.getRemainingDailyQuota() + " more emails can be sent today.");
+    // body.push("<br><br>" + MailApp.getRemainingDailyQuota() + " more emails can be sent today.");
+
+    if (this.config.debug) {
+      body.push("[DEBUG] Emails won't be deleted.")
+      console.log("[DEBUG] Email sent to: " + subject);
+    }
     var message = {
         to: notificationsAddr,
         subject: "[gscript][Gmail-Delete-Older-Than]: " + subject,
         htmlBody: body.join('<br>'),
     }
-    if (this.config.debug) {
-        console.log("Debug send email: " + subject);
-    } else {
-        MailApp.sendEmail(message);
-    }
+    MailApp.sendEmail(message);
   }
 
   purgeEmails(label, days, debug) {

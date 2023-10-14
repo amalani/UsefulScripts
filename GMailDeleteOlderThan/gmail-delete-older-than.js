@@ -26,6 +26,8 @@ Original at: https://github.com/amalani/UsefulScripts/blob/master/GMailDeleteOld
 
 Note: Just be careful when you setup the filters so that emails get auto-labeled as these will get deleted behind the scenes. Sometimes, companies use the same "from" address when sending promotional emails as well as transactional emails that you may not want to accidentally delete.
 
+10. If you'd like to receive a summary email with the subjects of all the emails that were deleted, add an email address to the notificationsAddr field. 
+
 */
 
 var config = {
@@ -72,6 +74,7 @@ class GmailDeleteOlderThan {
     var dtString = Utilities.formatDate(cutOff, Session.getScriptTimeZone(), "yyyy-MM-dd");
     var filter = "label:" + label + " before:" + dtString;
 
+    var subjects = new Array();
     var count = 0;
     try {
       var threads = GmailApp.search(filter, 0, 100);
@@ -80,8 +83,10 @@ class GmailDeleteOlderThan {
         for (var message = 0; message < messages.length; message++) {
           var email = messages[message];
           if (email.getDate() < cutOff) {
+            var subject = email.getFrom() + ": " + email.getSubject();
+            subjects.push(subject);
             if (debug) {
-              console.log(email.getFrom() + ": " + email.getSubject());
+              console.log(subject);
             }
             else {
               email.moveToTrash();
@@ -96,7 +101,7 @@ class GmailDeleteOlderThan {
 
     var msg = "Deleted " + count + " messages for [" + label + "]";
     console.log(msg);
-    return { message: msg, deletedCount: count };
+    return { message: msg, deletedCount: count, subjects: titles};
   }
 
 
@@ -106,7 +111,12 @@ class GmailDeleteOlderThan {
       var result = this.purgeEmails(this.config.filters[filter][0], this.config.filters[filter][1], this.config.debug);
       if (result.deletedCount != 0) {
         summary.push(result.message);
-      } 
+        summary.push("<br/>");
+        let sortedSubjects = result.subjects.sort();
+        summary = summary.concat(sortedSubjects);
+        // console.log(result.subjects);       
+        summary.push("<br/><br/>");
+      }
     }
 
     if (this.config.notificationsAddr.indexOf('@') > -1 && summary.length != 0) {
@@ -115,7 +125,7 @@ class GmailDeleteOlderThan {
   }
 }
 
-function main() {
+function GmailDeleteOlderEmails() {
   var runner = new GmailDeleteOlderThan(config);
   runner.run();
 }

@@ -9,6 +9,8 @@ specific emails.
 6. Run. 
 7. View Logger - verify working as expected.
 8. Turn off the debug flag.
+
+Get it at https://github.com/amalani/UsefulScripts/edit/master/GmailPurge/GmailPurge.js
 */
 
 var settings = {

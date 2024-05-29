@@ -19,7 +19,7 @@ function calendarEventTweaker() {
   var tagTitle = 'title-tweaker-title';
   var tagColor = 'title-tweaker-color';
 
-  var calendarId = 'abhishekm@dropbox.com';
+  var calendarId = '########################';
   var calendar = CalendarApp.getCalendarById(calendarId);
 
   var oneDayms = 24 * 60 * 60 * 1000;

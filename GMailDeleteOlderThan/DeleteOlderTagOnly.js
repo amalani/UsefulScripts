@@ -114,7 +114,8 @@ class GmailDeleteOlderThanTagOnly {
         suffix
       );
     } else if (cadence == "daily") {
-      // blank
+      // May-1
+      return labelDeletePrefix.getName() + "/" + dt.getShortMonthName() + "-" + dt.getDate();
     } else {
       throw Error("Cadence " + cadence + " not found.");
     }

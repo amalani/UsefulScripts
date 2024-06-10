@@ -83,12 +83,6 @@ class GmailDeleteOlderThanTagOnly {
     return GMailLabelUtils.getOrCreateLabel(deleteLabelPrefix);
   }
 
-  getWeekNumber(dt) {
-    var oneJan = new Date(dt.getFullYear(), 0, 1);
-    var numberOfDays = Math.floor((dt - oneJan) / (24 * 60 * 60 * 1000));
-    return Math.ceil((dt.getDay() + 1 + numberOfDays) / 7);
-  }
-
   getDeleteLabelByCadence(debug, cadence, dt) {
     var labelDeletePrefix = this.getDeleteLabelPrefix(debug);
     var suffix = "";
@@ -96,7 +90,7 @@ class GmailDeleteOlderThanTagOnly {
     if (cadence == "weekly") {
       // Get most recent start of week Sunday
       dtNow = dtNow.getLastSunday();
-      suffix = "-w" + this.getWeekNumber(dtNow);
+      suffix = "-w" + dtNow.getWeekNumber();
     } else if (cadence == "fortnight") {
       if (dtNow.getDate() <= 14) {
         dtNow.setDate(1);
@@ -374,5 +368,5 @@ function GmailDeleteOlderEmailsTagOnly(deleteLabels) {
 }
 
 function GmailDeleteOlderEmailsTagOnlyAndEmptyLabels() {
-  GmailDeleteOlderEmails(true);
+  GmailDeleteOlderEmailsTagOnly(true);
 }

@@ -4,11 +4,12 @@
 
 # Function to display usage information
 usage() {
-    echo "Usage: $0 -u base_url [-p padded_digits] [-d directory] [-t filename_text] [-e file_extension]"
+    echo "Usage: $0 -u base_url [-p padded_digits] [-d directory] [-t filename_text] [-s filename_suffix] [-e file_extension]"
     echo "  -u  Base URL (required)"
     echo "  -p  Number of padded digits (optional, default: no padding)"
     echo "  -d  Directory to save files (optional, default: current directory)"
     echo "  -t  Custom text to add to filenames (optional)"
+    echo "  -s  Custom filename suffix to add to filenames (optional)"
     echo "  -e  File extension (optional, default: jpg)"
     exit 1
 }
@@ -18,15 +19,17 @@ base_url=""
 padded_digits=0
 directory="."
 filename_text=""
+filename_suffix=""
 file_extension="jpg"
 
 # Parse command-line options
-while getopts "u:p:d:t:e:" opt; do
+while getopts "u:p:d:t:s:e:" opt; do
     case $opt in
         u) base_url=$OPTARG ;;
         p) padded_digits=$OPTARG ;;
         d) directory=$OPTARG ;;
         t) filename_text=$OPTARG ;;
+        s) filename_suffix=$OPTARG ;;
         e) file_extension=$OPTARG ;;
         *) usage ;;
     esac
@@ -47,9 +50,9 @@ i=1
 while true; do
     # Construct the filename and URL with or without padded digits and custom text
     if [ $padded_digits -gt 0 ]; then
-        filename=$(printf "%s%0${padded_digits}d.%s" "$filename_text" $i "$file_extension")
+        filename=$(printf "%s%0${padded_digits}d.%s" "$filename_text" $i "$filename_suffix" "$file_extension")
     else
-        filename="${filename_text}${i}.${file_extension}"
+        filename="${filename_text}${i}${filename_suffix}.${file_extension}"
     fi
     url="${base_url}${filename}"
 

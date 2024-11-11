@@ -56,11 +56,14 @@ while true; do
     fi
     url="${base_url}${filename}"
 
+    # echo $url
+    # break
+
     # Check if the file already exists in the directory
     if [ -f "${directory}/${filename}" ]; then
         # Get the size of the local file
         local_size=$(stat -f%z "${directory}/${filename}")
-        
+
         # Get the size of the remote file
         remote_size=$(wget --spider "$url" 2>&1 | grep 'Length:' | awk '{print $2}')
         
@@ -72,12 +75,12 @@ while true; do
         fi
     else
         # Check if the file exists on the server using wget --spider
-        wget --spider "$url" 2>&1 | grep '404 Not Found'
-        if [ $? -eq 0 ]; then
+        if wget --spider "$url" 2>&1 | grep -qE '404 Not Found|403 Forbidden'; then
             echo "File not found: $url"
             break
         fi
 
+        echo "tring to download"
         # Download the file to the specified directory
         wget -q --show-progress -c -O "${directory}/${filename}" "$url"
     fi

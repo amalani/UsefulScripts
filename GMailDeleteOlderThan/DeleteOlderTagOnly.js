@@ -12,7 +12,7 @@ Due to run time limits, I only deleted 100 emails per label per run - so if you 
 2. Create a new project.
 3. Paste this script.
 4. Update the filters below.
-5. Run - Press the play button in the top nav (ensure the method name in the drop down next to it is clearEmails() and not purgeEmails())
+5. Run - Press the play button in the top nav (ensure the method name in the drop down next to it is clearEmails() and not tagEmails())
     - On first run - you'll get asked permission to allow access to your gmail account.
 6. View Logger - verify working as expected.
 7. Set debug to false.
@@ -42,29 +42,44 @@ TODO:
 https://stackoverflow.com/questions/1129216/sort-array-of-objects-by-string-property-value
 */
 
-var configDoNotDelete = {
+// https://dmitripavlutin.com/javascript-enum/
+
+const ScriptMode = {
+  TAG_ONLY: 'tag_only',
+  AUTO_DELETE: 'auto-delete',
+}
+
+var config_tag_only = {
   // true/false -> true will only log to console, false will actually delete.
   debug: true,
 
   // These represent labels and the days you want to keep them - for instance, anything I want to keep only the most recent 7 days' emails, I label them with the .d7 label on row 1.
   // You can add as many such label/day combos as you like. I've commented the last two as an example.
   filters: [
-     ["to-delete/x7", 7]
-    ,["to-delete/x30", 30]
-    ,["to-delete/x60", 90]
-    ,["to-delete/x90", 90]
-    ,["to-delete/x180", 180]
-    ,["to-delete/x365", 365]
+     ["del/x7", 7]
+    ,["del/x30", 30]
+    ,["del/x60", 60]
+    ,["del/x90", 90]
+    ,["del/x180", 180]
+    ,["del/x365", 365]
   ],
+
+  auto_delete_label: 'del/auto', // Label which contains emails that are safe to delete
 
   limit: 50, // How many max email threads per run
 
   sendEmails: true, // Set Email addr in Config.emailAddr
 
-  cadence: "daily", // Grouping of emails to be deleted. 'monthly', 'daily', 'fortnight', 'weekly'
+  cadence: "monthly", // Grouping of emails to be deleted. 'monthly', 'daily', 'fortnight', 'weekly', 'yearly'
 
   deleteBufferDays: 0, // No of days to schedule in advance. You need to set a manual trigger for this.
+
+  mode: ScriptMode.TAG_ONLY,
 };
+
+var config_auto_delete = { ...config_tag_only };
+config_auto_delete.mode = ScriptMode.AUTO_DELETE;
+
 
 
 class GmailDeleteOlderThanTagOnly {
@@ -91,6 +106,7 @@ class GmailDeleteOlderThanTagOnly {
       // Get most recent start of week Sunday
       dtNow = dtNow.getLastSunday();
       suffix = "-w" + dtNow.getWeekNumber();
+      return labelDeletePrefix.getName() + "/" + dtNow.getShortMonthName() + "-" + dtNow.getDate();
     } else if (cadence == "fortnight") {
       if (dtNow.getDate() <= 14) {
         dtNow.setDate(1);
@@ -98,13 +114,21 @@ class GmailDeleteOlderThanTagOnly {
         dtNow.setDate(15);
       }
       suffix = "-bm";
+    } else if (cadence == "yearly") {
+      dtNow.setDate(1);
+      return (
+        labelDeletePrefix.getName() +
+        "/" +
+        Utilities.formatDate(dtNow, Session.getScriptTimeZone(), "yyyy") +
+        suffix
+      );
     } else if (cadence == "monthly") {
       dtNow.setDate(1);
       // suffix = '-monthly'
       return (
         labelDeletePrefix.getName() +
         "/" +
-        Utilities.formatDate(dtNow, Session.getScriptTimeZone(), "yyyy-MM") +
+        Utilities.formatDate(dtNow, Session.getScriptTimeZone(), "yyyy") + "-" + dt.getShortMonthName() +
         suffix
       );
     } else if (cadence == "daily") {
@@ -155,7 +179,7 @@ class GmailDeleteOlderThanTagOnly {
     return new Date().addDays(bufferDays);
   }
 
-  purgeEmails(label, days, debug, limit, cadence, deleteBufferDays) {
+  tagEmails(label, days, debug, limit, cadence, deleteBufferDays) {
     var cutOff = new Date();
     cutOff.setDate(cutOff.getDate() - days);
 
@@ -284,7 +308,7 @@ class GmailDeleteOlderThanTagOnly {
     var columnCount = 4;
 
     for (var filter = 0; filter < this.config.filters.length; filter++) {
-      var result = this.purgeEmails(
+      var result = this.tagEmails(
         this.config.filters[filter][0],
         this.config.filters[filter][1],
         this.config.debug,
@@ -333,15 +357,18 @@ class GmailDeleteOlderThanTagOnly {
       this.config.cadence,
       deletionDate,
     );
+
     var message =
-      "Deleted total " +
+      "Acted on " +
       deletedCount +
       " messages - assigned label [<a href='https://mail.google.com/mail/u/0/#label/" +
       label.getName() +
       "'>" +
       label.getName() +
       "</a>].<br/>";
+    
     var subject = "Emails tagged to be deleted";
+
     if (!this.config.debug) {
       message = "Deleted total " + deletedCount + " messages.<br/><br/>";
       subject = "Emails deleted";
@@ -359,7 +386,10 @@ class GmailDeleteOlderThanTagOnly {
 
 function GmailDeleteOlderEmailsTagOnly(deleteLabels) {
   // Add Labels only
-  var runner = new GmailDeleteOlderThanTagOnly(configDoNotDelete);
+  // var runner = new GmailDeleteOlderThanTagOnly(config_tag_only);
+  // runner.run();
+
+  var runner = new GmailDeleteOlderThanTagOnly(config_auto_delete);
   runner.run();
 
   if (deleteLabels) {
@@ -369,4 +399,11 @@ function GmailDeleteOlderEmailsTagOnly(deleteLabels) {
 
 function GmailDeleteOlderEmailsTagOnlyAndEmptyLabels() {
   GmailDeleteOlderEmailsTagOnly(true);
+}
+
+/// Thinking for auto delete
+// Can't look at email filters. Need to look at .t tag + .auto tag that are older than x/number days a
+
+function GmailDeleteOlderEmailsTagOnlyTest() {
+  GmailDeleteOlderEmailsTagOnly(false);
 }

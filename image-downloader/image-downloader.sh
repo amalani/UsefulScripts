@@ -56,7 +56,7 @@ fi
 mkdir -p "$directory"
 
 # Initialize the counter
-i=1
+i=0
 
 # Start the loop
 while true; do

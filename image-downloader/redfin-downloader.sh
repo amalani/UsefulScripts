@@ -74,9 +74,23 @@ echo "ID: $ID"
 # echo "Part 2: $PART2"
 # echo "Part 3: $PART3"
 
+LIMIT=50
+
 # ./image-downloader.sh -u https://ssl.cdn-redfin.com/photo/1/bigphoto/441/ -d 14816-116th-Pl-NE-98034 -t 2308441_ -s _0
 # Execute 
-./image-downloader.sh -u $BASE_URL -d $ADDRESS -t $ID -s _0 
+# Download first image
+echo "Downloading first image"
+./image-downloader.sh -d $ADDRESS -u $BASE_URL  -t $ID 
+# big photo
+echo "Downloading big photos"
+./image-downloader.sh -m continue -l $LIMIT -d $ADDRESS -u $BASE_URL  -t $ID -s _0 
+
+
+# medium photo
+# https://ssl.cdn-redfin.com/photo/1/mbpaddedwide/011/genMid.2308011_7_2.jpg
+echo "Downloading medium photos"
+./image-downloader.sh -m continue -l $LIMIT -d $ADDRESS -u https://ssl.cdn-redfin.com/photo/1/mbpaddedwide/011/genMid. -t  $ID -s _2
+
 
 
 # parse_url() {

@@ -84,6 +84,9 @@ echo "Downloading first image"
 # big photo
 echo "Downloading big photos"
 ./image-downloader.sh -m continue -l $LIMIT -d $ADDRESS -u $BASE_URL  -t $ID -s _0 
+./image-downloader.sh -m continue -l $LIMIT -d $ADDRESS -u $BASE_URL  -t $ID -s _1
+./image-downloader.sh -m continue -l $LIMIT -d $ADDRESS -u $BASE_URL  -t $ID -s _2 
+
 
 
 # medium photo

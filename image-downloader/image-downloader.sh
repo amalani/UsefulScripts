@@ -4,7 +4,7 @@
 
 # Function to display usage information
 usage() {
-    echo "Usage: $0 -u base_url [-p padded_digits] [-d directory] [-t filename_text] [-s filename_suffix] [-e file_extension] [-m mode] [-l upper_limit]"
+    echo "Usage: $0 -u base_url [-p padded_digits] [-d directory] [-t filename_text] [-s filename_suffix] [-e file_extension] [-m mode] [-l upper_limit] [-r root_directory]"
     echo "  -u  Base URL (required)"
     echo "  -p  Number of padded digits (optional, default: no padding)"
     echo "  -d  Directory to save files (optional, default: current directory)"
@@ -13,6 +13,7 @@ usage() {
     echo "  -e  File extension (optional, default: jpg)"
     echo "  -m  Mode (optional, 'stop' or 'continue', default: stop)"
     echo "  -l  Upper limit for file counter (optional, required in 'continue' mode)"
+    echo "  -r  Root directory where the target directory will be created (optional, default: current directory)"
     exit 1
 }
 
@@ -25,9 +26,10 @@ filename_suffix=""
 file_extension="jpg"
 mode="stop"
 upper_limit=0
+root_directory="."
 
 # Parse command-line options
-while getopts "u:p:d:t:s:e:m:l:" opt; do
+while getopts "u:p:d:t:s:e:m:l:r:" opt; do
     case $opt in
         u) base_url=$OPTARG ;;
         p) padded_digits=$OPTARG ;;
@@ -37,6 +39,7 @@ while getopts "u:p:d:t:s:e:m:l:" opt; do
         e) file_extension=$OPTARG ;;
         m) mode=$OPTARG ;;
         l) upper_limit=$OPTARG ;;
+        r) root_directory=$OPTARG ;;
         *) usage ;;
     esac
 done
@@ -52,8 +55,14 @@ if [ "$mode" == "continue" ] && [ "$upper_limit" -le 0 ]; then
     exit 1
 fi
 
+# Construct the full directory path
+full_directory="${root_directory}/${directory}"
+
 # Create directory if it doesn't exist
-mkdir -p "$directory"
+mkdir -p "$full_directory" || {
+    echo "Error: Unable to create directory at $full_directory"
+    exit 1
+}
 
 # Initialize the counter
 i=0
@@ -74,13 +83,15 @@ while true; do
     url="${base_url}${filename}"
 
     # Check if the file already exists in the directory
-    if [ -f "${directory}/${filename}" ]; then
-        echo "File already exists: ${directory}/${filename}"
+    if [ -f "${full_directory}/${filename}" ]; then
+        # echo "File already exists: ${full_directory}/${filename}"
+        echo "File already exists: ${filename}"
     else
         # Check if the file exists on the server using wget --spider
         if wget --spider "$url" 2>&1 | grep -qE '404 Not Found|403 Forbidden'; then
             echo "File not found: $url"
             if [ "$mode" == "stop" ]; then
+                # echo # Add a newline before exiting 
                 break
             else
                 i=$((i + 1))
@@ -90,8 +101,11 @@ while true; do
 
         # Download the file to the specified directory
         echo "Downloading: $url"
-        wget -q --show-progress -c -O "${directory}/${filename}" "$url"
+        wget -q --show-progress -c -O "${full_directory}/${filename}" "$url"
     fi
 
     i=$((i + 1))
 done
+
+echo
+

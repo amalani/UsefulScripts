@@ -80,19 +80,19 @@ LIMIT=50
 # Execute 
 # Download first image
 echo "Downloading first image"
-./image-downloader.sh -d $ADDRESS -u $BASE_URL  -t $ID 
+./image-downloader.sh -r ../../../redfin-houses -d $ADDRESS -u $BASE_URL  -t $ID 
 # big photo
 echo "Downloading big photos"
-./image-downloader.sh -m continue -l $LIMIT -d $ADDRESS -u $BASE_URL  -t $ID -s _0 
-./image-downloader.sh -m continue -l $LIMIT -d $ADDRESS -u $BASE_URL  -t $ID -s _1
-./image-downloader.sh -m continue -l $LIMIT -d $ADDRESS -u $BASE_URL  -t $ID -s _2 
+./image-downloader.sh -m continue -l $LIMIT -r ../../../redfin-houses -d $ADDRESS -u $BASE_URL  -t $ID -s _0 
+./image-downloader.sh -m continue -l $LIMIT -r ../../../redfin-houses -d $ADDRESS -u $BASE_URL  -t $ID -s _1
+./image-downloader.sh -m continue -l $LIMIT  -r ../../../redfin-houses -d $ADDRESS -u $BASE_URL  -t $ID -s _2 
 
 
 
 # medium photo
 # https://ssl.cdn-redfin.com/photo/1/mbpaddedwide/011/genMid.2308011_7_2.jpg
 echo "Downloading medium photos"
-./image-downloader.sh -m continue -l $LIMIT -d $ADDRESS -u https://ssl.cdn-redfin.com/photo/1/mbpaddedwide/011/genMid. -t  $ID -s _2
+./image-downloader.sh -m continue -l $LIMIT -r ../../../redfin-houses -d $ADDRESS -u https://ssl.cdn-redfin.com/photo/1/mbpaddedwide/011/genMid. -t  $ID -s _2
 
 
 

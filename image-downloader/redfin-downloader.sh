@@ -86,6 +86,10 @@ echo "Downloading big photos"
 ./image-downloader.sh -m continue -l $LIMIT -r ../../../redfin-houses -d $ADDRESS -u $BASE_URL  -t $ID -s _0 
 ./image-downloader.sh -m continue -l $LIMIT -r ../../../redfin-houses -d $ADDRESS -u $BASE_URL  -t $ID -s _1
 ./image-downloader.sh -m continue -l $LIMIT  -r ../../../redfin-houses -d $ADDRESS -u $BASE_URL  -t $ID -s _2 
+./image-downloader.sh -m continue -l $LIMIT  -r ../../../redfin-houses -d $ADDRESS -u $BASE_URL  -t $ID -s _3
+./image-downloader.sh -m continue -l $LIMIT  -r ../../../redfin-houses -d $ADDRESS -u $BASE_URL  -t $ID -s _4
+./image-downloader.sh -m continue -l $LIMIT  -r ../../../redfin-houses -d $ADDRESS -u $BASE_URL  -t $ID -s _5
+
 
 
 

@@ -44,10 +44,10 @@ https://stackoverflow.com/questions/1129216/sort-array-of-objects-by-string-prop
 
 // https://dmitripavlutin.com/javascript-enum/
 
-// const ScriptMode = {
-//   TAG_ONLY: 'tag_only',
-//   AUTO_DELETE: 'auto-delete',
-// }
+const ScriptMode = {
+  TAG_ONLY: 'tag_only',
+  AUTO_DELETE: 'auto-delete',
+}
 
 var config_tag_only = {
     // true/false -> true will only log to console, false will actually delete.

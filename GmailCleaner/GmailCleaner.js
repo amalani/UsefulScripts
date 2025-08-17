@@ -105,7 +105,7 @@ For more information: https://github.com/amalani/UsefulScripts/tree/master/GMail
 // Script Modes
 const ScriptMode = {
     // Only tags the emails
-    TAG_ONLY: 'tag_only',
+    TAG_ONLY: 'tag-only',
     // Deletes using /auto tag entries
     AUTO_DELETE: 'auto-delete',
     // Deletes using auto tag filter entry
@@ -516,6 +516,12 @@ function GmailCleanerAutoDelete(deleteLabels = false) {
     }
 }
 
+// Main function for auto-deleting emails
+function GmailCleanerDeleteEmptyLabels(deleteLabels = true) {
+    var fullConfig = getFullConfig();
+      deleteEmptyLabelsWithConfig(fullConfig);
+}
+
 // Unified entry point
 function GmailCleaner(mode = "tag") {
     if (mode === "delete") {
@@ -546,8 +552,8 @@ function GmailCleanerAutoDeleteTest() {
     runner.run();
 }
 
-function GmailCleanerTest(mode = "tag") {
-    if (mode === "delete") {
+function GmailCleanerTest(mode = ScriptMode.TAG_ONLY) {
+    if (mode === ScriptMode.AUTO_DELETE) {
         GmailCleanerAutoDeleteTest();
     } else {
         GmailCleanerTagOnlyTest();

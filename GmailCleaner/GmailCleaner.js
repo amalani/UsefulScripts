@@ -50,19 +50,16 @@ Label Format
 Primary Labels:
 - "del/x30" format (where 30 is days to keep)
 - Examples:
-  * del/x2  - Keep for 2 days (FilterType.LABEL)
+  * del/x2  - Keep for 2 days  (FilterType.LABEL)
   * del/x7  - Keep for 7 days
   * del/x30 - Keep for 30 days
   * del/x90 - Keep for 90 days
-  * del/ax90 - Keep for 90 days but auto deleted (FilterType.AUTO_CLEANUP)
-
-You can use either FilterType.LABEL or FilterType.AUTO_CLEANUP or both. 
-FilterType.LABEL is used for emails that are not auto-deleted. I used these to tag emails for manual deletion. If you create a del/auto filter and tag the emails with that label too, those will get auto deleted.
-FilterType.AUTO_CLEANUP is used for emails that are auto-deleted.
+- Auto cleanup
+  * del/ax90 - Keep for 30 days but auto clear emails (FilterType.AUTO_CLEANUP)
 
 System Labels:
 - d/t       - Marks emails tagged for deletion
-- del/auto  - Emails with the above filters (FilterType.LABEL) + this filter both will get deleted. Only used for label filter mode. If you use auto filter type, then just the label name gets used.
+- del/auto  - Marks emails ready for auto-deletion (works in coordination with FilterType.LABEL)
 
 Configuration Options
 -------------------
@@ -102,55 +99,6 @@ For more information: https://github.com/amalani/UsefulScripts/tree/master/GMail
 
 // ===== CONFIGURATION =====
 
-// Script Modes
-const ScriptMode = {
-    // Only tags the emails
-    TAG_ONLY: 'tag-only',
-    // Deletes using /auto tag entries
-    AUTO_DELETE: 'auto-delete',
-    // Deletes using auto tag filter entry
-    AUTO_DELETE_TAGS: 'auto-delete-filters',
-};
-
-const FilterType = {
-    // Filter is a label
-    LABEL: 'label',
-    // Filter is a filter
-    AUTO_CLEANUP: 'auto-label',
-};
-
-// Configuration for both modes
-var config = {
-    // Debug mode - true will only log actions, false will perform deletions
-    debug: true,
-
-    // Email retention periods and their labels
-    filters: [
-        {label: "del/x7", daysToKeep: 7, filterType: FilterType.LABEL},
-        {label: "del/x30", daysToKeep: 30, filterType: FilterType.LABEL},
-        {label: "del/x90", daysToKeep: 90, filterType: FilterType.LABEL},
-        {label: "del/x180", daysToKeep: 180, filterType: FilterType.LABEL},
-
-        {label: "del/ax7", daysToKeep: 7, filterType: FilterType.AUTO_CLEANUP},
-        {label: "del/ax30", daysToKeep: 30, filterType: FilterType.AUTO_CLEANUP},
-        {label: "del/ax60", daysToKeep: 60, filterType: FilterType.AUTO_CLEANUP}, 
-        {label: "del/ax180", daysToKeep: 180, filterType: FilterType.AUTO_CLEANUP},
-    ],
-
-    // System labels
-    auto_delete_label: 'del/auto',  // Label which contains emails that are safe to delete. This is only used in FilterType.LABEL mode.
-
-    // Process limits
-    limit: 30,  // How many max email threads per run
-
-    // Notification settings
-    sendEmails: true,  // Enable email notifications
-    // emailAddress is loaded from Config.js - see setup instructions below
-
-    // Timing settings
-    cadence: "monthly",     // Grouping of emails to be deleted. 'monthly', 'daily', 'fortnight', 'weekly', 'yearly'
-    deleteBufferDays: 0,    // No of days to schedule in advance. You need to set a manual trigger for this.
-};
 
 // Merge config with Config.js settings
 function getFullConfig() {
@@ -459,7 +407,7 @@ class GmailAutoDeleter extends GmailCleanerBase {
                 for (var message = 0; message < messages.length; message++) {
                     var email = messages[message];
 
-                    console.log(email.getDate().toISOString().split("T")[0] + " " + email.getFrom() + ": " + email.getSubject());
+                    console.log("\t" + email.getDate().toISOString().split("T")[0] + " " + email.getFrom() + ": " + email.getSubject());
 
                     fields.push(this.createEmailField(email, threads[thread]));
                     
@@ -473,9 +421,11 @@ class GmailAutoDeleter extends GmailCleanerBase {
             console.log(e);
         }
 
-        var msg = "<strong>" + days + " days: " + count + " emails deleted</strong> [<a href='https://mail.google.com/mail/u/0/#label/" + label + "'>" + label + "</a>].";
-        console.log(msg);
+        var cutOff = new Date();
+        cutOff.setDate(cutOff.getDate() - days);
 
+        console.log("\t" + label + ": " + days + " days: " + count + " emails deleted received before " + cutOff.toDateString());
+        var msg = "<strong>" + days + " days: " + count + "</strong> emails deleted received before " + cutOff.toDateString() + " [<a href='https://mail.google.com/mail/u/0/#label/" + label + "'>" + label + "</a>].";
         return { message: msg, deletedCount: count, messageFields: fields };
     }
 

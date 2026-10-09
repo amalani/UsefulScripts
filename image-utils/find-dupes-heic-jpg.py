@@ -8,49 +8,84 @@ def format_size(bytes_val):
         bytes_val /= 1024.0
     return f"{bytes_val:.2f} PB"
 
-def analyze_paths(paths):
-    total_pairs = 0
-    total_heic_savings = 0
-    total_jpg_savings = 0
+def scan_target(target_path, global_seen):
+    folder_pairs = 0
+    folder_heic = 0
+    folder_jpg = 0
 
-    # Avoid scanning the same canonical folder twice if nested or duplicated
-    seen_files = set()
+    for root, _, files in os.walk(target_path):
+        entries = {}
+        for f in files:
+            stem, ext = os.path.splitext(f)
+            ext_lower = ext.lower()
+            if ext_lower in ['.heic', '.jpg', '.jpeg']:
+                full_path = os.path.abspath(os.path.join(root, f))
+                if full_path in global_seen:
+                    continue
+                global_seen.add(full_path)
 
-    for target in paths:
-        if not os.path.isdir(target):
-            print(f"Skipping (not a directory): {target}", file=sys.stderr)
+                try:
+                    size = os.path.getsize(full_path)
+                    entries.setdefault(stem.lower(), {})[ext_lower] = size
+                except OSError:
+                    continue
+
+        for stem, exts in entries.items():
+            has_heic = '.heic' in exts
+            jpg_ext = '.jpg' if '.jpg' in exts else ('.jpeg' if '.jpeg' in exts else None)
+
+            if has_heic and jpg_ext:
+                folder_pairs += 1
+                folder_heic += exts['.heic']
+                folder_jpg += exts[jpg_ext]
+
+    return folder_pairs, folder_heic, folder_jpg
+
+def main():
+    target_dirs = sys.argv[1:] if len(sys.argv) > 1 else ['.']
+    global_seen = set()
+    results = []
+
+    print("=" * 70)
+    print("SCANNING TARGET DIRECTORIES")
+    print("=" * 70)
+
+    for path in target_dirs:
+        norm_path = os.path.abspath(path)
+        if not os.path.isdir(norm_path):
+            print(f"\n[SKIP] Not a valid directory: {path}")
             continue
 
-        for root, _, files in os.walk(target):
-            entries = {}
-            for f in files:
-                stem, ext = os.path.splitext(f)
-                ext_lower = ext.lower()
-                if ext_lower in ['.heic', '.jpg', '.jpeg']:
-                    full_path = os.path.abspath(os.path.join(root, f))
-                    if full_path in seen_files:
-                        continue
-                    seen_files.add(full_path)
+        print(f"\nScanning: {norm_path} ...", flush=True)
+        pairs, heic_bytes, jpg_bytes = scan_target(norm_path, global_seen)
 
-                    try:
-                        size = os.path.getsize(full_path)
-                        entries.setdefault(stem.lower(), {})[ext_lower] = size
-                    except OSError:
-                        continue
+        print(f"  Pairs found      : {pairs:,}")
+        print(f"  Remove JPGs frees : {format_size(jpg_bytes)} ({jpg_bytes:,} bytes)")
+        print(f"  Remove HEICs frees: {format_size(heic_bytes)} ({heic_bytes:,} bytes)")
 
-            for stem, exts in entries.items():
-                has_heic = '.heic' in exts
-                jpg_ext = '.jpg' if '.jpg' in exts else ('.jpeg' if '.jpeg' in exts else None)
+        results.append({
+            'path': path,
+            'pairs': pairs,
+            'heic_bytes': heic_bytes,
+            'jpg_bytes': jpg_bytes
+        })
 
-                if has_heic and jpg_ext:
-                    total_pairs += 1
-                    total_heic_savings += exts['.heic']
-                    total_jpg_savings += exts[jpg_ext]
+    # Summary section
+    total_pairs = sum(r['pairs'] for r in results)
+    total_heic = sum(r['heic_bytes'] for r in results)
+    total_jpg = sum(r['jpg_bytes'] for r in results)
 
-    print(f"Duplicate pairs found: {total_pairs:,}")
-    print(f"Space reclaimed if removing JPGs  : {format_size(total_jpg_savings)} ({total_jpg_savings:,} bytes)")
-    print(f"Space reclaimed if removing HEICs : {format_size(total_heic_savings)} ({total_heic_savings:,} bytes)")
+    print("\n" + "=" * 70)
+    print("AGGREGATED SUMMARY")
+    print("=" * 70)
+    print(f"{'Target Folder':<32} {'Pairs':<10} {'JPG Savings':<14} {'HEIC Savings':<14}")
+    print("-" * 70)
+    for r in results:
+        disp_name = r['path'] if len(r['path']) <= 30 else "..." + r['path'][-27:]
+        print(f"{disp_name:<32} {r['pairs']:<10,d} {format_size(r['jpg_bytes']):<14} {format_size(r['heic_bytes']):<14}")
+    print("-" * 70)
+    print(f"{'TOTAL':<32} {total_pairs:<10,d} {format_size(total_jpg):<14} {format_size(total_heic):<14}")
+    print("=" * 70)
 
 if __name__ == '__main__':
-    target_dirs = sys.argv[1:] if len(sys.argv) > 1 else ['.']
-    analyze_paths(target_dirs)
+    main()

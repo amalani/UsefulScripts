@@ -20,7 +20,31 @@ The same `src/` is deployed as **two separate script projects** (one per account
 
 Merge keeps the richest contact, unions emails/phones/addresses/orgs/labels, and concatenates distinct notes.
 
-Not built yet: the B → A sync (B-side export, A-side marker + sync).
+## B → A sync
+
+B is the source of truth for names, phones, addresses, orgs and birthdays. A mirrors them. Notes, labels,
+and A-only contacts are never touched, and emails are only ever added to, not removed. Nothing is written to B.
+
+| Where | Function | What it does |
+|---|---|---|
+| **B** | `exportForSync()` | Writes the owned fields to one Drive file (`b-contacts-sync-export.json`), overwritten each run. |
+| **A** | `syncDryRun()` | Changes nothing. Writes the plan to the "Contacts Sync Review" Sheet (tabs: Plan, Summary). |
+| **A** | `syncApply()` | Backs up, then applies the plan. Safe to re-run. |
+| B / A | `installWeeklyExportTrigger()` / `installWeeklySyncTrigger()` | Weekly triggers (Mon ~5am export in B, ~6am sync in A). Install only after a dry run looks right. |
+
+Plan actions: **UPDATE** (linked, fields differ), **LINK** (unlinked A contact matched to a B contact by shared
+email/phone with a compatible name; gets a `B_SYNC` external ID), **CREATE** (no A match), **REVIEW** (ambiguous,
+or same name with nothing else shared; never written), **REMOVED** (linked A contact whose B contact is gone;
+gets the "Removed from B" label, never deleted).
+
+Safety stops (errors, nothing written): export older than 14 days, would create more than 100 contacts, export
+has under half the linked contacts, or over 10% of linked contacts vanished from B. Limits are in `Config.js`.
+
+First-time setup:
+1. In **B**: run `exportForSync()`. Open the logged Drive URL and share the file with **A** as Viewer (once).
+2. In **A**: run `syncDryRun()` and read the Sheet. Run `syncApply()` when happy (it may take a few runs; each run is capped at 400 writes).
+3. Run `syncDryRun()` again: UPDATE should be near zero. If the same contacts keep showing UPDATE, tell me what the Changes column says.
+4. Install the two weekly triggers.
 
 ## Order of use
 

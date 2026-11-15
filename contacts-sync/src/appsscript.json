@@ -1,5 +1,5 @@
 {
-  "timeZone": "America/Los_Angeles",
+  "timeZone": "America/New_York",
   "dependencies": {
     "enabledAdvancedServices": [
       { "userSymbol": "People", "serviceId": "peopleapi", "version": "v1" }
@@ -10,6 +10,7 @@
   "oauthScopes": [
     "https://www.googleapis.com/auth/contacts",
     "https://www.googleapis.com/auth/drive",
-    "https://www.googleapis.com/auth/spreadsheets"
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/userinfo.email"
   ]
 }

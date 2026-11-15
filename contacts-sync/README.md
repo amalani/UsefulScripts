@@ -30,21 +30,36 @@ Not built yet: the B → A sync (B-side export, A-side marker + sync).
 
 ## Setup with clasp (push from this repo)
 
-clasp is not installed here; `npx` works without installing. One-time, per Google account:
+clasp is not installed here; `npx` works without installing. The project root is `contacts-sync/`
+(clasp refuses a `rootDir` outside the folder holding its config), with one git-ignored config file
+per account: `.clasp.A.json` and `.clasp.B.json`, both pointing at `src/`.
 
-1. Turn on the Apps Script API for that account: https://script.google.com/home/usersettings
-2. Log in as that account, then create and push its project:
+One-time, per Google account: turn on the Apps Script API at https://script.google.com/home/usersettings
 
 ```bash
-cd contacts-sync/account-A
-npx @google/clasp login --user A
-npx @google/clasp create --type standalone --title "Contacts Tools (A)" --rootDir ../src
-npx @google/clasp push --user A
+cd contacts-sync
+npx @google/clasp -u A login
+npx @google/clasp -u A create-script --type standalone --title "Contacts Tools (A)" --rootDir src
+mv .clasp.json .clasp.A.json
+npx @google/clasp -u A -P .clasp.A.json push
 ```
 
-Repeat in `account-B/` with `--user B` (log in as account B first). Each folder gets its own
-`.clasp.json` (git-ignored) pointing at `../src`. Then open the project in the browser
-(`npx @google/clasp open-script`), pick a function, and Run. The first run asks for permissions.
+Then repeat for B (log in as account B in the browser):
+
+```bash
+npx @google/clasp -u B login
+npx @google/clasp -u B create-script --type standalone --title "Contacts Tools (B)" --rootDir src
+mv .clasp.json .clasp.B.json
+npx @google/clasp -u B -P .clasp.B.json push
+```
+
+Gotchas: `create-script` overwrites `src/appsscript.json` with a bare default (dropping the People service),
+so run `git checkout -- src/appsscript.json` right after it (stage your manifest edits first), and push with `--force`
+the first time since there is no prompt in a script. Always pass `-u A` / `-u B` to `create-script`; a project made
+under the wrong account gives "The caller does not have permission" on push.
+
+Later pushes: `npx @google/clasp -u A -P .clasp.A.json push` (or `B`). To open a project in the browser,
+swap `push` for `open-script`. Then pick a function and Run; the first run asks for permissions.
 
 Not using clasp? Create a project at script.google.com, paste each `src/*.js` file in, and
 replace the manifest with `src/appsscript.json` (View > Show manifest file).

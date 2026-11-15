@@ -1,2 +1,26 @@
+# clasp project configs (script IDs, one per account)
 .clasp.json
+.clasp.*.json
+.clasprc.json
+
+# Real contact data: never commit backups, exports or test dumps
+*.vcf
+*.csv
+contacts-*.json
+ContactsBackup/
+backups/
+exports/
+*-backup*.json
+*-export*.json
+
+# Credentials / secrets
+.env
+.env.*
+credentials*.json
+client_secret*.json
+token*.json
+*.pem
+*.key
+
 node_modules/
+.DS_Store

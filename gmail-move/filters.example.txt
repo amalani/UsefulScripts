@@ -1,0 +1,10 @@
+# gmail-move rules. One rule per line:   label | gmail query | [limit] [inbox]
+# The label is applied to moved mail in the destination account (created if missing).
+# Gmail search syntax: from: to: subject: larger:10M older_than:1y has:attachment category:promotions -is:starred OR ( )
+
+max_per_run = 200        # total messages per run, all rules combined
+max_mb_per_run = 500     # total size per run
+
+moved/big         | larger:10M older_than:30d                          | 100
+moved/promos      | category:promotions older_than:6m                  | 100
+moved/newsletters | from:(noreply@example.com OR news@example.org)

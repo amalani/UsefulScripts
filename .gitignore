@@ -3,3 +3,13 @@
 .env.*
 .clasprc.json
 node_modules/
+
+# gmail-move secrets/state
+gmail-move/credentials.json
+gmail-move/token_*.json
+gmail-move/moved.json
+gmail-move/.venv/
+__pycache__/
+gmail-move/auto.log
+gmail-move/filters.json
+gmail-move/filters.txt

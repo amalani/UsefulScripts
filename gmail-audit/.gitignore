@@ -1,0 +1,13 @@
+# clasp project config (script ID) and login
+.clasp.json
+.clasp.*.json
+.clasprc.json
+
+# Mailbox data: never commit exports of sender lists
+*.csv
+*.xlsx
+
+.env
+.env.*
+node_modules/
+.DS_Store

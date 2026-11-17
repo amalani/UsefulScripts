@@ -89,6 +89,7 @@ function runJobChunk_() {
   const job = getJob_();
   if (!job) return;
   const t0 = Date.now();
+  HARD_DEADLINE = t0 + 5.3 * 60 * 1000;
   const data = loadSenders_();
   let done = false, errMsg = '';
 
@@ -116,8 +117,9 @@ function runJobChunk_() {
     }
     job.fails = 0;
   } catch (e) {
-    job.fails = (job.fails || 0) + 1;
     errMsg = String((e && e.message) || e);
+    // Being throttled is not a failure: progress up to the last finished page is saved and the next chunk retries.
+    if (!isQuotaError_(e)) job.fails = (job.fails || 0) + 1;
   }
 
   if (done && job.mode === 'initial') data.list.sort((a, b) => b.all - a.all);
@@ -147,6 +149,8 @@ function runJobChunk_() {
     'Senders in sheet': data.list.length,
     'Last chunk finished': new Date(),
     'Counted up to (newest mail)': cursor ? new Date(cursor) : '(not set yet)',
-    'Last error': errMsg
+    'Last error': errMsg,
+    'Fetch stats (this run)': 'batches ' + FETCH_STATS.batches + ', rate-limited parts ' + FETCH_STATS.rateLimitedParts +
+      ', other failed parts ' + FETCH_STATS.otherFailedParts + ', single-get fallbacks ' + FETCH_STATS.singleGets
   });
 }

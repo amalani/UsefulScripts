@@ -6,6 +6,14 @@
 const META_HEADERS = ['From', 'List-Unsubscribe'];
 const META_FIELDS = 'id,internalDate,sizeEstimate,labelIds,payload/headers';
 
+let HARD_DEADLINE = 0; // epoch ms; set by the scan loop, 0 = none
+const RATE_BACKOFF_MS =[5000, 15000, 30000, 60000]; // waits between retries of a rate-limited batch
+const FETCH_STATS = { batches: 0, rateLimitedParts: 0, otherFailedParts: 0, singleGets: 0 };
+
+function isQuotaError_(e) {
+  return /quota|rate limit|too many|user-rate/i.test(String((e && e.message) || e));
+}
+
 function withRetry_(fn) {
   let lastErr;
   for (let i = 0; i < 5; i++) {
@@ -13,7 +21,12 @@ function withRetry_(fn) {
       return fn();
     } catch (e) {
       lastErr = e;
-      Utilities.sleep(500 * Math.pow(2, i));
+      if (isQuotaError_(e)) {
+        if (i >= 3) break;                    // still throttled after ~70s: give up, the scan resumes next chunk
+        Utilities.sleep(10000 * Math.pow(2, i)); // 10s, 20s, 40s
+      } else {
+        Utilities.sleep(500 * Math.pow(2, i));
+      }
     }
   }
   throw lastErr;
@@ -46,19 +59,35 @@ function listAll_(q) {
  */
 function fetchMetadata_(ids) {
   const out = [];
+  // Ends the chunk cleanly (progress saved, resumes next chunk) before Apps Script's 6 minute kill.
+  const checkDeadline = sleepMs => {
+    if (HARD_DEADLINE && Date.now() + sleepMs > HARD_DEADLINE) throw new Error('Rate limit pause: out of time in this chunk');
+  };
+  // Pace so a full batch never finishes faster than MAX_GETS_PER_MIN allows.
+  const minIntervalMs = Math.ceil(CONFIG.BATCH_SIZE / CONFIG.MAX_GETS_PER_MIN * 60000);
   for (let i = 0; i < ids.length; i += CONFIG.BATCH_SIZE) {
+    checkDeadline(0);
+    const started = Date.now();
     let pending = ids.slice(i, i + CONFIG.BATCH_SIZE);
-    for (let attempt = 0; attempt < 4 && pending.length; attempt++) {
+    for (let attempt = 0; attempt <= RATE_BACKOFF_MS.length && pending.length; attempt++) {
       const res = batchGet_(pending);
+      FETCH_STATS.batches++;
       res.ok.forEach(m => out.push(m));
       pending = res.failed;
-      if (pending.length) Utilities.sleep(1000 * Math.pow(2, attempt));
+      if (pending.length && attempt < RATE_BACKOFF_MS.length) {
+        checkDeadline(RATE_BACKOFF_MS[attempt]);
+        Utilities.sleep(RATE_BACKOFF_MS[attempt]);
+      }
     }
+    // Still failing after the backoffs: try one at a time (also covers the batch endpoint misbehaving).
+    // If that is throttled too, it throws a quota error and the chunk ends cleanly; the scan resumes later.
     pending.forEach(id => {
+      FETCH_STATS.singleGets++;
       const m = singleGet_(id);
       if (m) out.push(m);
     });
-    Utilities.sleep(CONFIG.BATCH_PAUSE_MS);
+    const wait = minIntervalMs - (Date.now() - started);
+    if (wait > 0) Utilities.sleep(wait);
   }
   return out;
 }
@@ -119,7 +148,11 @@ function parseBatch_(text, ids) {
     const st = part.match(/HTTP\/\d(?:\.\d)?\s+(\d{3})/);
     const status = st ? Number(st[1]) : 0;
     if (status === 404) { seen[id] = true; return; }   // deleted since we listed it
-    if (status !== 200) return;                          // rate limit / server error: retry
+    if (status !== 200) {                                // rate limit / server error: retry
+      if (status === 429 || status === 403) FETCH_STATS.rateLimitedParts++;
+      else FETCH_STATS.otherFailedParts++;
+      return;
+    }
     const a = part.indexOf('{', st.index);
     const b = part.lastIndexOf('}');
     if (a < 0 || b < a) return;

@@ -10,8 +10,9 @@ const CONFIG = {
   FIRST_YEAR: 2004,           // first per-year column (Gmail launched in 2004)
 
   LIST_PAGE: 500,             // message ids per messages.list call (API max)
-  BATCH_SIZE: 40,             // messages per Gmail batch request (each get costs 5 quota units; limit ~250/sec)
-  BATCH_PAUSE_MS: 700,        // pause between batches, keeps us under the per-user rate limit
+  BATCH_SIZE: 40,             // messages per Gmail batch request
+  MAX_GETS_PER_MIN: 1500,     // pacing. Each get costs 5 quota units, so 1500/min = 7,500 units/min. Gmail enforces
+                              // per-second AND per-minute per-user limits; raise this only if scans run clean
   TIME_BUDGET_MS: 4.5 * 60 * 1000, // stop starting new pages after this; Apps Script kills runs at 6 min
   CONTINUE_DELAY_MIN: 1,      // a scan that isn't finished re-triggers itself this many minutes later
 

@@ -67,10 +67,12 @@ Not using clasp? Open Extensions > Apps Script in any Sheet, paste each `src/*.j
 
 ## Things to know
 
-- **Speed.** Metadata is fetched through Gmail's batch endpoint, 40 messages per request. This has been tested against
-  a simulated mailbox only, not yet against a real one. A rough guess for 80,000 messages is 8 to 15 chunks, so
-  well under an hour of trigger time (Apps Script allows 90 minutes of trigger runtime per day on a free account).
-  If a run hits Gmail rate limits it backs off and retries on its own.
+- **Speed and rate limits.** Metadata is fetched through Gmail's batch endpoint, 40 messages per request, paced to
+  `MAX_GETS_PER_MIN` (default 1500, about 7,500 quota units a minute) because Gmail enforces a per-user per-minute
+  quota. At that pace 80,000 messages is roughly an hour spread over ~12 chunks. Apps Script allows 90 minutes of
+  trigger runtime per day on a free account, so leave the default unless runs are clean. If Gmail still throttles,
+  the run backs off, ends cleanly, keeps its progress and the next chunk resumes (the Status tab shows
+  "rate-limited parts"). Only tested against a simulated mailbox so far.
 - **Do not clean up while the initial scan runs.** Deleting or archiving during it can make the paging skip or repeat a few
   messages. Anything off is fixed by refreshing that sender.
 - **One sender, many addresses.** Newsletters that rotate addresses (`news-4821@...`) show as many rows; the Domains tab groups them.

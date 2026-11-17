@@ -37,8 +37,9 @@ function refreshChecked() {
       }
     });
     saveSenders_(data.list);
+    stampStatus_('refresh checked rows (' + done + ' sender' + (done === 1 ? '' : 's') + ')');
 
-    let msg = 'Refreshed ' + done + ' sender(s).';
+    let msg ='Refreshed ' + done + ' sender(s).';
     if (left) msg += '\n' + left + ' still ticked; run Refresh again to continue.';
     if (failed.length) msg += '\nFailed, left ticked:\n' + failed.join('\n');
     if (approx.length) msg += '\nSize is an estimate (too many messages to re-measure) for:\n' + approx.join('\n');

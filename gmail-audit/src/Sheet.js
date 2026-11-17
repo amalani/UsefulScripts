@@ -168,4 +168,14 @@ function writeStatus_(kv) {
   sh.getRange(1, 1, rows.length, 1).setFontWeight('bold');
   sh.setColumnWidth(1, 200);
   sh.setColumnWidth(2, 420);
+  stampStatus_(kv['Mode'] ? 'scan chunk (' + kv['Mode'] + ')' : 'scan chunk');
+}
+
+/** Status!C1 = when anything last ran (a scan chunk or a refresh), C2 = what ran. */
+function stampStatus_(what) {
+  const ss = SpreadsheetApp.getActive();
+  const sh = ss.getSheetByName(CONFIG.STATUS_SHEET) || ss.insertSheet(CONFIG.STATUS_SHEET);
+  sh.getRange('C1').setValue(new Date()).setNumberFormat('yyyy-mm-dd hh:mm:ss').setFontWeight('bold');
+  sh.getRange('C2').setValue(what);
+  sh.setColumnWidth(3, 170);
 }
